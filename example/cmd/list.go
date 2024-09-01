@@ -10,7 +10,7 @@ var list = &rabbit_cli.Cmd{
 	Description: "输出实例键值对",
 	Run: func(c *rabbit_cli.Cmd, args []string) {
 		for s, s2 := range m {
-			fmt.Printf("%s \"%s\"", s, s2)
+			fmt.Printf("%s \"%s\"\n", s, s2)
 		}
 	},
 }

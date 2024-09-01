@@ -46,10 +46,12 @@ func (c *Cmd) AddSub(cmd *Cmd) bool {
 	if c.sub == nil {
 		c.sub = make(map[string]*Cmd)
 	}
-	for _, c2 := range c.sub {
-		if c2.Name == cmd.Name {
-			return false
-		}
+	if cmd.Name == "" || cmd.Name[0] == '-' {
+		panic("invalid command name \"" + cmd.Name + "\"")
+	}
+	_, ok := c.sub[cmd.Name]
+	if ok {
+		return false
 	}
 	c.sub[cmd.Name] = cmd
 	return true
@@ -100,7 +102,7 @@ func (c *Cmd) UsageInfo() string {
 	return buf.String()
 }
 
-func (c *Cmd) Flag() *FlagSet {
+func (c *Cmd) Flags() *FlagSet {
 	if c.flag == nil {
 		c.flag = new(FlagSet)
 		c.flag.FlagSet = flag.NewFlagSet(c.Name, flag.ContinueOnError)
@@ -135,6 +137,11 @@ func (c *Cmd) Execute(args []string) (cmd *Cmd, err error) {
 	err = c.flag.Parse(args)
 	args = c.flag.Args()
 	return c, err
+}
+
+func (c *Cmd) ExecuteContext(ctx context.Context, args []string) (cmd *Cmd, err error) {
+	c.ctx = ctx
+	return c.Execute(args)
 }
 
 // GroupCmd 一组命令的定义，没有任何默认行为
@@ -172,6 +179,9 @@ func (p *GroupCmd) AddCmd(cmds ...*Cmd) bool {
 		p.m = make(map[string]*Cmd)
 	}
 	for _, cmd := range cmds {
+		if cmd.Name == "" || cmd.Name[0] == '-' {
+			panic("invalid command name \"" + cmd.Name + "\"")
+		}
 		if _, ok := p.m[cmd.Name]; ok {
 			return false
 		}
@@ -189,9 +199,14 @@ func (p *GroupCmd) AddCmdMust(cmds ...*Cmd) {
 	}
 }
 
-// ExecuteCmdStr cmdStr 输入的命令行字符串，返回值*Cmd如果不为nil，则代表错误发生在执行的命令中，等于nil则代表GroupCmd执行错误
-func (p *GroupCmd) ExecuteCmdStr(cmdStr string) (*Cmd, error) {
-	return p.Execute(strings.Fields(cmdStr))
+// ExecuteCmdLine s 输入的命令行字符串，返回值*Cmd如果不为nil，则代表错误发生在执行的命令中，等于nil则代表GroupCmd执行错误
+func (p *GroupCmd) ExecuteCmdLine(s string) (*Cmd, error) {
+	return p.Execute(strings.Fields(s))
+}
+
+// ExecuteCmdLineContext 同上但支持传递ctx 参数
+func (p *GroupCmd) ExecuteCmdLineContext(ctx context.Context, s string) (*Cmd, error) {
+	return p.ExecuteContext(ctx, strings.Fields(s))
 }
 
 // Execute args 输入的命令参数，返回值*Cmd如果不为nil，则代表错误发生在执行的命令中，等于nil则代表GroupCmd执行错误
@@ -208,8 +223,7 @@ func (p *GroupCmd) ExecuteContext(ctx context.Context, args []string) (*Cmd, err
 	if err != nil {
 		return nil, err
 	}
-	cmd.ctx = ctx
-	return cmd.Execute(_args)
+	return cmd.ExecuteContext(ctx, _args)
 }
 
 func (p *GroupCmd) queryCmd(args []string) (*Cmd, []string, error) {

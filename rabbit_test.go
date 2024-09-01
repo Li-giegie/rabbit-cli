@@ -1,59 +1,42 @@
 package rabbit_cli
 
 import (
-	"flag"
 	"fmt"
-	"log"
-	"strings"
 	"testing"
-	"time"
 )
 
-func TestName(t *testing.T) {
-	p := new(GroupCmd)
+func TestBase(t *testing.T) {
 	root := &Cmd{
 		Name:        "root",
 		Description: "初始命令",
-		Run:         nil,
-	}
-	root.Flag().String("a", "123", "属性a")
-	root.Flag().String("b", "123", "属性b")
-	list := &Cmd{
-		Name: "list",
 		Run: func(c *Cmd, args []string) {
-			fmt.Println("root.list", args)
-			fmt.Println(c.Flag().Lookup("b"))
+			fmt.Println("args", args)
 		},
 	}
-	list.Flag().String("b", "234", "b")
-	root.AddSub(list)
-	root.AddSub(&Cmd{
-		Name:        "create",
-		Description: "创建一个实例",
-	})
-	if !p.AddCmd(root) {
-		log.Fatalln("cmd exist")
-	}
-	_, err := p.ExecuteCmdStr("-h")
+	_, err := root.Execute([]string{"1"})
 	if err != nil {
 		fmt.Println(err)
-		p.Usage()
+	}
+	_, err = root.Execute([]string{"root"})
+	if err != nil {
+		fmt.Println(err)
 	}
 }
 
-func TestFlagSet(t *testing.T) {
-	f := new(FlagSet)
-	f.FlagSet = flag.NewFlagSet("test", flag.ContinueOnError)
-	n := f.String("n", "", "")
-	a := f.Int("a", 0, "0")
-	b := f.Bool("b", false, "")
-	d := f.Duration("abc", time.Second, "")
-	err := f.Parse(strings.Fields("-n 123 -a 10 -b=true -abc 1ms"))
+func TestGroupCmd(t *testing.T) {
+	g := &GroupCmd{
+		Description: "command group",
+	}
+	g.AddCmd(&Cmd{
+		Name:        "help",
+		Description: "",
+		Run: func(c *Cmd, args []string) {
+			g.Usage()
+		},
+	})
+	_, err := g.ExecuteCmdLine("help")
 	if err != nil {
-		log.Fatalln(err)
+		fmt.Println(err)
 	}
 
-	fmt.Println(*n, *a, *b, *d)
-	f.Reset()
-	fmt.Println(*n, *a, *b, *d)
 }

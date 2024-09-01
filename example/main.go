@@ -16,14 +16,9 @@ func Execute() {
 	fmt.Print(">>")
 	for s.Scan() {
 		if s.Text() != "" {
-			triggerCmd, err := cmd.Group.ExecuteCmdStr(s.Text())
+			_, err := cmd.Group.ExecuteCmdLine(s.Text())
 			if err != nil {
 				fmt.Println(err)
-				if triggerCmd != nil {
-					triggerCmd.Usage()
-				} else {
-					cmd.Group.Usage()
-				}
 			}
 		}
 		fmt.Print(">>")
