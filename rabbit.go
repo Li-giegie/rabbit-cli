@@ -8,11 +8,184 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type FlagSet struct {
 	*flag.FlagSet
+}
+
+func (f *FlagSet) GetString(name string) (string, error) {
+	v, err := f.getFlag(name, "string")
+	if err != nil {
+		return "", err
+	}
+	return v.(string), nil
+}
+
+func (f *FlagSet) GetInt(name string) (int, error) {
+	v, err := f.getFlag(name, "int")
+	if err != nil {
+		return 0, err
+	}
+	return v.(int), nil
+}
+
+func (f *FlagSet) GetInt8(name string) (int8, error) {
+	v, err := f.getFlag(name, "int8")
+	if err != nil {
+		return 0, err
+	}
+	return v.(int8), nil
+}
+
+func (f *FlagSet) GetInt16(name string) (int16, error) {
+	v, err := f.getFlag(name, "int16")
+	if err != nil {
+		return 0, err
+	}
+	return v.(int16), nil
+}
+
+func (f *FlagSet) GetInt32(name string) (int32, error) {
+	v, err := f.getFlag(name, "int32")
+	if err != nil {
+		return 0, err
+	}
+	return v.(int32), nil
+}
+
+func (f *FlagSet) GetInt64(name string) (int64, error) {
+	v, err := f.getFlag(name, "int64")
+	if err != nil {
+		return 0, err
+	}
+	return v.(int64), nil
+}
+
+func (f *FlagSet) GetUint(name string) (uint, error) {
+	v, err := f.getFlag(name, "uint")
+	if err != nil {
+		return 0, err
+	}
+	return v.(uint), nil
+}
+
+func (f *FlagSet) GetUint8(name string) (uint8, error) {
+	v, err := f.getFlag(name, "uint8")
+	if err != nil {
+		return 0, err
+	}
+	return v.(uint8), nil
+}
+
+func (f *FlagSet) GetUint16(name string) (uint16, error) {
+	v, err := f.getFlag(name, "uint16")
+	if err != nil {
+		return 0, err
+	}
+	return v.(uint16), nil
+}
+
+func (f *FlagSet) GetUint32(name string) (uint32, error) {
+	v, err := f.getFlag(name, "uint32")
+	if err != nil {
+		return 0, err
+	}
+	return v.(uint32), nil
+}
+
+func (f *FlagSet) GetUint64(name string) (uint64, error) {
+	v, err := f.getFlag(name, "uint64")
+	if err != nil {
+		return 0, err
+	}
+	return v.(uint64), nil
+}
+
+func (f *FlagSet) GetBool(name string) (bool, error) {
+	v, err := f.getFlag(name, "bool")
+	if err != nil {
+		return false, err
+	}
+	return v.(bool), nil
+}
+
+func (f *FlagSet) GetFloat32(name string) (float32, error) {
+	v, err := f.getFlag(name, "float32")
+	if err != nil {
+		return 0, err
+	}
+	return v.(float32), nil
+}
+
+func (f *FlagSet) GetFloat64(name string) (float64, error) {
+	v, err := f.getFlag(name, "float64")
+	if err != nil {
+		return 0, err
+	}
+	return v.(float64), nil
+}
+
+func (f *FlagSet) GetDuration(name string) (time.Duration, error) {
+	v, err := f.getFlag(name, "Duration")
+	if err != nil {
+		return 0, err
+	}
+	return v.(time.Duration), nil
+}
+
+func (f *FlagSet) getFlag(name string, typ string) (interface{}, error) {
+	flagV := f.Lookup(name)
+	if flagV == nil {
+		err := fmt.Errorf("flag accessed but not defined: %s", name)
+		return nil, err
+	}
+	strV := flagV.Value.String()
+	switch typ {
+	case "string":
+		return strV, nil
+	case "int":
+		return strconv.Atoi(strV)
+	case "int8":
+		v, err := strconv.ParseInt(strV, 0, 8)
+		return int8(v), err
+	case "int16":
+		v, err := strconv.ParseInt(strV, 0, 16)
+		return int16(v), err
+	case "int32":
+		v, err := strconv.ParseInt(strV, 0, 32)
+		return int32(v), err
+	case "int64":
+		return strconv.ParseInt(strV, 0, 64)
+	case "uint":
+		v, err := strconv.ParseUint(strV, 0, 0)
+		return uint(v), err
+	case "uint8":
+		v, err := strconv.ParseUint(strV, 0, 8)
+		return uint8(v), err
+	case "uint16":
+		v, err := strconv.ParseUint(strV, 0, 16)
+		return uint16(v), err
+	case "uint32":
+		v, err := strconv.ParseUint(strV, 0, 32)
+		return uint32(v), err
+	case "uint64":
+		return strconv.ParseUint(strV, 0, 64)
+	case "bool":
+		return strconv.ParseBool(strV)
+	case "float32":
+		v, err := strconv.ParseFloat(strV, 32)
+		return float32(v), err
+	case "float64":
+		return strconv.ParseFloat(strV, 32)
+	case "Duration":
+		return time.ParseDuration(strV)
+	default:
+		panic("Unknown type")
+	}
 }
 
 func (f *FlagSet) Reset() {
